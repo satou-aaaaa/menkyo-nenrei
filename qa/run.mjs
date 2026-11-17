@@ -64,7 +64,7 @@ const NEVER = {};
   const total = Object.values(seen).reduce((a, s) => a + s.size, 0), few = G.KINDS.filter((k) => seen[k.id].size < 12).map((k) => `${k.id}:${seen[k.id].size}`);
   check("問題の数：全部で300通り以上・どの種類も12通り以上（好きなだけ遊んでも同じ問題が続かない。game-dev.md F6）", total >= 300 && few.length === 0, `${total}通り ${few.join(",")}`);
   check("問題：種類は17（やさしい6・ふつう6・むずかしい5）・表の種類と同じ", G.KINDS.length === 17 && [0, 1, 2].map((l) => G.kindsOf(l).length).join() === "6,6,5" && Object.keys(TB).length === 17);
-  check("答えは6つの年齢とも出る・選び肢の並びは若い順", ORDER.every((o) => G.KINDS.some((k) => k.ans === o)) && JSON.stringify(G.LEVELS) === JSON.stringify(ORDER));
+  check("答えは6つの年齢とも出る・選び肢のもとの一覧（LEVELS）は若い順（画面の選び肢はわざと混ぜる）", ORDER.every((o) => G.KINDS.some((k) => k.ans === o)) && JSON.stringify(G.LEVELS) === JSON.stringify(ORDER));
   check("2段目は3つ（要らない・持っていることが要る・経験の年数も要る）とも答えに出る", Object.keys(G.GROUPS).join() === "nashi,motsu,keiken" && Object.keys(G.GROUPS).every((g) => G.KINDS.some((k) => k.grp === g)));
   check("費用・病気などの欠格・罰則は出さない（説明に入れない）", !G.KINDS.some((k) => /費用|料金|病気|罰金|罰則|反則金/.test(k.why + k.key + k.look)));
   const longWhy = [], longLook = [], longOpt = [];
@@ -99,7 +99,7 @@ const NEVER = {};
 const html = readFileSync(path.join(root, "index.html"), "utf8"), gen = readFileSync(path.join(root, "data.js"), "utf8"), readme = readFileSync(path.join(root, "README.md"), "utf8");
 const ext = [...html.matchAll(/(?:src|href)="(https?:[^"]+)"/g)].map((m) => m[1]).filter((u) => !/^https:\/\/fonts\.googleapis\.com(\/|$)|^https:\/\/ko-fi\.com\/satouaaaaa$/.test(u));
 check("外から読むのは文字（Google Fonts）だけ。スクリプト・広告・解析を入れない（出典のリンクは押したときに開くだけ）", ext.length === 0 && ![...html.matchAll(/<script[^>]+src="([^"]+)"/g)].some((m) => /^https?:/.test(m[1])), ext.join(","));
-check("CSP で通信先を自分だけにしている", /connect-src 'self'/.test(html) && !/connect-src[^;"]*https/.test(html));
+check("CSP で通信先を自分だけにしている（connect-src は 'self' だけ。CodeRabbit menkyo-nenrei#1）", (html.match(/connect-src[^;"]*/g) || []).map((s) => s.trim()).join("|") === "connect-src 'self'");
 check("Math.random は練習・とことんの種だけ（今日の5問・上級は日付の乱数。data.js には無い）", (html.match(/Math\.random/g) || []).length === 2 && !/Math\.random/.test(gen));
 check("乱数は sort の比較の中で引かない（ブラウザで引く回数が変わる）", !/\.sort\(\s*\([^)]*\)\s*=>[^\n;]*\b(R|rng|rand|Math\.random)\s*\(/.test(html + gen));
 { const inl = html.split("<script>").slice(1).map((x) => x.split("</" + "script>")[0]).join("\n"); // index.html の中の script も見る（nemuri-kotsu#1 で行の途中に // を入れて画面が動かなくなった）
